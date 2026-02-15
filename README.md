@@ -32,6 +32,127 @@ This utility script provides a colorful hexdump of data received from the ToneX 
 ### Usage:
 Execute the script to start monitoring serial and MIDI traffic.
 
+## `tonex.js` Library Documentation
+
+The `tonex.js` module provides a class-based interface to manage communication with an IK Multimedia ToneX pedal via Serial and MIDI.
+
+### `ToneX` Class
+
+#### `new ToneX(serialPath, deviceName)`
+
+Creates an instance of the ToneX controller.
+
+-   `serialPath` (string): The path to the serial port (e.g., `/dev/tty.usbmodem14301`).
+-   `deviceName` (string): The name of the ToneX MIDI device (e.g., 'ToneX').
+
+**Example:**
+
+```javascript
+const ToneX = require('./tonex.js');
+const tonex = new ToneX('/dev/tty.usbmodem14301', 'ToneX');
+```
+
+### Methods
+
+#### `.connect()`
+
+Opens the serial port connection and starts listening for data. Automatically triggers a sync after connection.
+
+**Example:**
+
+```javascript
+tonex.connect();
+```
+
+#### `.sync()`
+
+Initiates a sync process to request a full data dump from the pedal.
+
+**Example:**
+
+```javascript
+tonex.sync();
+```
+
+#### `.sendCommand(type, data)`
+
+Sends a MIDI command to the ToneX pedal.
+
+-   `type` (string): The type of MIDI command (`'cc'` or `'program'`).
+-   `data` (object): The MIDI message data.
+
+**Example:**
+
+```javascript
+// Send a Control Change message
+tonex.sendCommand('cc', { controller: 23, value: 64, channel: 0 });
+
+// Send a Program Change message
+tonex.sendCommand('program', { number: 5, channel: 0 });
+```
+
+#### `.disconnect()`
+
+Closes all MIDI and Serial connections.
+
+**Example:**
+
+```javascript
+function shutdown() {
+    tonex.disconnect();
+    process.exit(0);
+}
+```
+
+#### `.getTypes()`
+
+Retrieves the dictionaries for effect types.
+
+-   **Returns**: `{MOD_TYPES: object, DLY_TYPES: object, REV_TYPES: object}`
+
+**Example:**
+
+```javascript
+const { MOD_TYPES, DLY_TYPES, REV_TYPES } = tonex.getTypes();
+const modType = MOD_TYPES[state.modType];
+```
+
+### Events
+
+You can listen to events emitted by the `ToneX` instance.
+
+**Example:**
+
+```javascript
+tonex.on('stateChange', (newState) => {
+    // Update your UI with the new state
+    console.log('New state:', newState);
+});
+
+tonex.on('serialConnected', () => {
+    console.log('Serial Connected!');
+});
+```
+
+-   `serialConnected`: Emitted when the serial port is successfully connected.
+-   `serialError`: Emitted when a serial port error occurs.
+    -   **Parameter**: `errorMessage` (string)
+-   `syncStart`: Emitted when a sync process is started.
+    -   **Parameter**: `type` (string) - e.g., 'Preset UP'
+-   `syncError`: Emitted when a sync process fails.
+    -   **Parameter**: `errorMessage` (string)
+-   `midiError`: Emitted when a MIDI command fails (e.g., output is not connected).
+    -   **Parameter**: `errorMessage` (string)
+-   `dumpReceived`: Emitted when a full data dump is received from the pedal.
+-   `midiProgramChange`: Emitted when a MIDI Program Change message is received.
+    -   **Parameter**: `pcNumber` (number)
+-   `midiControlChange`: Emitted when a MIDI Control Change message is received.
+    -   **Parameter**: `controller` (number)
+    -   **Parameter**: `value` (number)
+-   `stateChange`: Emitted whenever the pedal's state changes.
+    -   **Parameter**: `newState` (object) - The complete new state object.
+    
+
 ## TONEX SERIAL PROTOCOL & MIDI MAPPING DOCUMENTATION v46
 
 This section details the communication protocol and MIDI mapping for the ToneX pedal, derived from `tonexprotocol.txt`.
