@@ -51,12 +51,33 @@ class ToneX extends EventEmitter {
         this.deviceName = deviceName;
 
         /**
-         * The current state of the ToneX pedal.
+         * The current state of the ToneX pedal. This object holds all the real-time parameters
+         * of the pedal's current preset. The state is updated internally when data is
+         * received from the serial port (full dump) or MIDI (program/control changes).
+         * 
+         * The `stateChange` event is emitted whenever this object is modified.
+         *
          * @type {object}
-         * @property {number} bank - The current bank number.
-         * @property {number} pc - The current program change number.
-         * @property {string} name - The name of the current patch.
-         * // ... and other parameters
+         * @property {number} bank - The current bank number (0-49).
+         * @property {number} pc - The current program change number within the bank (0-2 for A, B, C).
+         * @property {string} name - The name of the current preset.
+         * @property {number} gain - The gain level (0-10).
+         * @property {number} bass - The bass level (0-10).
+         * @property {number} mid - The mid level (0-10).
+         * @property {number} treb - The treble level (0-10).
+         * @property {number} vol - The volume level (0-10).
+         * @property {boolean} gate - The status of the noise gate (on/off).
+         * @property {boolean} comp - The status of the compressor (on/off).
+         * @property {boolean} mod - The status of the modulation effect (on/off).
+         * @property {boolean} dly - The status of the delay effect (on/off).
+         * @property {boolean} rev - The status of the reverb effect (on/off).
+         * @property {number} modType - The type of modulation effect. See {@link ToneX#getTypes}.
+         * @property {number} dlyType - The type of delay effect. See {@link ToneX#getTypes}.
+         * @property {number} revType - The type of reverb effect. See {@link ToneX#getTypes}.
+         * 
+         * @see {@link ToneX#event:stateChange}
+         * @see {@link ToneX#_handleSerialData} for state updates from full dump.
+         * @see {@link ToneX#_handleMidiProgram} and {@link ToneX#_handleMidiCC} for state updates from MIDI.
          */
         this.state = {
             bank: 0, pc: 0, name: "WAITING SYNC...",

@@ -52,6 +52,74 @@ const ToneX = require('./tonex.js');
 const tonex = new ToneX('/dev/tty.usbmodem14301', 'ToneX');
 ```
 
+### Complete Example
+
+Here is a complete example of how to use the `ToneX` class to connect to the pedal, listen for state changes, send a command, and disconnect.
+
+```javascript
+const ToneX = require('./tonex.js');
+
+// Replace with your actual serial port and MIDI device name
+const SERIAL_PATH = '/dev/tty.usbmodem14301'; // or 'COM3' on Windows
+const MIDI_NAME = 'ToneX';
+
+const tonex = new ToneX(SERIAL_PATH, MIDI_NAME);
+
+console.log('Attempting to connect to ToneX pedal...');
+
+// Listen for the 'stateChange' event to get real-time updates
+tonex.on('stateChange', (newState) => {
+    console.log('State updated:');
+    console.log(`  Patch Name: ${newState.name}`);
+    console.log(`  Gain: ${newState.gain.toFixed(2)}`);
+    console.log(`  Volume: ${newState.vol.toFixed(2)}`);
+    console.log(`  Reverb: ${newState.rev ? 'ON' : 'OFF'}`);
+});
+
+// Listen for the 'serialConnected' event
+tonex.on('serialConnected', () => {
+    console.log('✅ Serial connection successful! Waiting for first data sync...');
+});
+
+// Listen for errors
+tonex.on('serialError', (errorMessage) => {
+    console.error(`❌ Serial Error: ${errorMessage}`);
+    console.log('Please check your serial port path and ensure the pedal is connected.');
+});
+
+tonex.on('syncError', (errorMessage) => {
+    console.error(`❌ Sync Error: ${errorMessage}`);
+});
+
+// Connect to the pedal
+// This will automatically trigger an initial sync.
+tonex.connect();
+
+// Example of sending a command: Set gain to 5 after 5 seconds
+setTimeout(() => {
+    console.log('\nSending command: Set Gain to 5.0');
+    // MIDI CC for GAIN is 10. The value is 0-127.
+    // We map 5.0 (out of 10.0) to 64 (out of 127).
+    tonex.sendCommand('cc', { controller: 10, value: 64 });
+}, 5000);
+
+
+// Disconnect after 10 seconds
+setTimeout(() => {
+    console.log('\nDisconnecting...');
+    tonex.disconnect();
+    console.log('Disconnected. Exiting.');
+    process.exit(0);
+}, 10000);
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+    console.log('Caught interrupt signal. Disconnecting...');
+    tonex.disconnect();
+    process.exit();
+});
+```
+
 ### Methods
 
 #### `.connect()`
