@@ -31,7 +31,7 @@ class ToneX extends EventEmitter {
         };
 
         this.port = new SerialPort({ path: this.serialPath, baudRate: 115200, autoOpen: false });
-        this.port.on('open', () => this.emit('log', '{green-fg}✅ Seriale Connessa.{/}'));
+        this.port.on('open', () => this.emit('serialConnected'));
         this.port.on('data', this._handleSerialData.bind(this));
         
         const inputs = easymidi.getInputs();
@@ -54,7 +54,7 @@ class ToneX extends EventEmitter {
     connect() {
         this.port.open((err) => {
             if (err) {
-                this.emit('log', `{red-fg}Serial Error: ${err.message}{/}`);
+                this.emit('serialError', err.message);
             } else {
                 setTimeout(() => this.sync(), 1000);
             }
@@ -63,14 +63,14 @@ class ToneX extends EventEmitter {
 
     sync() {
         if (this.midiOutput) {
-            this.emit('log', `{magenta-fg}🔄 Sync: Preset UP...{/}`);
+            this.emit('syncStart', 'Preset UP');
             this.midiOutput.send('cc', { controller: 87, value: 0 });
             setTimeout(() => {
-                this.emit('log', `{magenta-fg}🔄 Sync: Preset DOWN...{/}`);
+                this.emit('syncStart', 'Preset DOWN');
                 this.midiOutput.send('cc', { controller: 86, value: 0 });
             }, 150);
         } else {
-            this.emit('log', `{red-fg}Sync fallito: MIDI Out disconnesso.{/}`);
+            this.emit('syncError', 'MIDI Out disconnesso');
         }
     }
     
@@ -81,7 +81,7 @@ class ToneX extends EventEmitter {
                 this.midiInput.emit('cc', data);
             }
         } else {
-            this.emit('log', '{red-fg}No MIDI OUT.{/}');
+            this.emit('midiError', 'MIDI Out non connesso');
         }
     }
 
@@ -107,7 +107,7 @@ class ToneX extends EventEmitter {
                 this.state.dlyType = Math.round(readFloat(this.buffer, OFFSETS.DLY_TY));
                 this.state.revType = Math.round(rVal);
 
-                this.emit('log', `{gray-fg}[SERIAL] Dump received.{/}`);
+                this.emit('dumpReceived');
                 this.emit('stateChange', this.state);
             }
             this.buffer = Buffer.alloc(0);
@@ -116,7 +116,7 @@ class ToneX extends EventEmitter {
     
     _handleMidiProgram(msg) {
         this.state.pc = msg.number;
-        this.emit('log', `{magenta-fg}[MIDI IN] PC ${msg.number}{/}`);
+        this.emit('midiProgramChange', msg.number);
         this.emit('stateChange', this.state);
     }
     
@@ -136,7 +136,7 @@ class ToneX extends EventEmitter {
             } else {
                 this.state[param] = msg.value >= 64;
             }
-            this.emit('log', `{blue-fg}[MIDI IN] CC ${msg.controller} -> ${msg.value}{/}`);
+            this.emit('midiControlChange', msg.controller, msg.value);
             this.emit('stateChange', this.state);
         }
     }

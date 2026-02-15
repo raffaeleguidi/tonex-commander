@@ -114,8 +114,36 @@ tonex.on('stateChange', (newState) => {
     renderUI();
 });
 
-tonex.on('log', (message) => {
-    replLog.log(message);
+tonex.on('serialConnected', () => {
+    replLog.log('{green-fg}✅ Seriale Connessa.{/}');
+});
+
+tonex.on('serialError', (errorMessage) => {
+    replLog.log(`{red-fg}Serial Error: ${errorMessage}{/}`);
+});
+
+tonex.on('syncStart', (type) => {
+    replLog.log(`{magenta-fg}🔄 Sync: ${type}...{/}`);
+});
+
+tonex.on('syncError', (errorMessage) => {
+    replLog.log(`{red-fg}Sync fallito: ${errorMessage}{/}`);
+});
+
+tonex.on('midiError', (errorMessage) => {
+    replLog.log(`{red-fg}${errorMessage}{/}`);
+});
+
+tonex.on('dumpReceived', () => {
+    replLog.log(`{gray-fg}[SERIAL] Dump received.{/}`);
+});
+
+tonex.on('midiProgramChange', (pcNumber) => {
+    replLog.log(`{magenta-fg}[MIDI IN] PC ${pcNumber}{/}`);
+});
+
+tonex.on('midiControlChange', (controller, value) => {
+    replLog.log(`{blue-fg}[MIDI IN] CC ${controller} -> ${value}{/}`);
 });
 
 // HANDLERS
