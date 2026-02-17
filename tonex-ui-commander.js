@@ -177,8 +177,6 @@ inputField.on('submit', line => {
     screen.render();
 });
 
-screen.key(['C-c', 'C-d'], () => shutdown());
-
 inputField.focus();
 renderUI();
 tonex.connect();
